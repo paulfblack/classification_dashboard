@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <style type="text/css">
+	.header {
+		position: absolute;
+		top:90px;
+		text-align: center;
+		width: 200px;
+		border-bottom:thick solid  #000;
+		font: 15px Arial;
+}
+	.title {
+		width: 1000px;
+		position: absolute;
+		top: 10px;
+		text-align: center;
+		left: 30px;
+		font: 25px arial;
+}
+
+	.scores {
+	font: sans-serif;
+	left: 180px;
+}
+	.params {
+	font: sans-serif;
+	left: 680px;
+}
+	
+	.left{	
+	font: 15px arial;
+	position: absolute;
+	top: 140px;
+	left: 655px;
+}
+
+	.right { 
+		font: 15px arial;
+		position: absolute;
+		top: 140px;
+		left: 855px;
+		}
+
+	.right text {
+    font: sans-serif;
+}
+
+	.checkbox text {
+		fill: black;
+		font: 10px sans-serif;
+	}
+
+	.chart text {
+		fill: black;
+		font: 10px sans-serif;
+		text-anchor: end;
+}
+
+	.hbar {
+		font: sans-serif;
+		position: absolute;
+    top: 140px;
+    left: 30px;
+}
+
+	.vbar {
+		font: sans-serif;
+		position: absolute;
+    top: 330px;
+    left: 30px;
+}
+
+/*
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+*/
+  </style>
+</head>
+<body>
+	<div class="title"><p>Relative Accuracy of Feature Combinations</p></div>
+	<div class="header scores">SCORES</div>
+	<div class="header params">FEATURES</div>
+	<svg class="hbar chart"></svg>
+	<div color="steelblue" class="left">
+		<input type="checkbox" class="paramCheckbox checkbox" value="1"> Teamfight Participation <br><br>
+    <input type="checkbox" class="paramCheckbox checkbox" value="2"> Assist Rate <br> <br>
+    <input type="checkbox" class="paramCheckbox checkbox" value="4"> Environmental Deaths <br> <br>
+    <input type="checkbox" class="paramCheckbox checkbox" value="8"> Kills <br> <br>
+		<input type="checkbox" class="paramCheckbox checkbox" value="16"> Healing <br> <br>
+	</div>
+	<div class="right">
+		<input type="checkbox" class="paramCheckbox checkbox" value="32"> Exp Earn Rate <br> <br>
+    <input type="checkbox" class="paramCheckbox checkbox" value="64"> End Level <br> <br>
+    <input type="checkbox" class="paramCheckbox checkbox" value="128"> Percentage Gold Spent  <br> <br>
+    <input type="checkbox" class="paramCheckbox checkbox" value="256"> Gold Spent <br> <br>
+		 <input type="checkbox" class="selectAll" value="256"> Select All <br> <br>
+	</div>
+	<svg width="1000" height="300" class="vbar"></svg>
+	
+<script src="https://d3js.org/d3.v4.js"></script> 
+ <script>
+	d3.selectAll("p")
+		.attr("font-family", "Verdana");
+  // Horizontal Bar Slider
+	var col_code = 0;
+	var width = 575,
+			height = 175;
+ 
+	var barWidth = 0;
+
+	var color = d3.scaleOrdinal()
+    .domain(d3.range(4))
+    .range(d3.schemeCategory20c);
+
+	var x = d3.scaleLinear()
+			.range([1, width-110]);
+	
+	var y0 = d3.scaleBand()
+    .domain(["F1 Score","Recall", "Precision","Accuracy"])
+		.rangeRound([height, 0])
+		.padding(0.05);                 
+
+	var yAxis = d3.axisLeft(y0);
+
+
+	var chart = d3.select(".hbar")
+			.attr("width", width)
+			.attr("height", height);
+	
+	function draw(subset) {
+		
+		chart.append("g")
+			.attr("class", "axis")  //Assign "axis" class
+			.call(yAxis)
+			.attr("transform", "translate(" + 70 +  ",0)");
+	
+		chart.selectAll("g.rect").remove();
+
+		var bar = chart.selectAll("g.rect")
+				.data(subset)
+				.enter().append("g")
+					.attr("class", "rect")
+											
+		bar.append("rect")
+				.attr("y", function(d, i) { return y0.bandwidth() * i + 12;})
+				.attr("x", 71)
+				.attr("height", y0.bandwidth() - 3 )
+				.attr("fill", function(d, i) { return color(i); })
+				.transition()
+				.duration(500)
+				.attr("width", function(d) { return x(d.Scores); } ); 
+
+		bar.append("text")
+			.attr("x", function(d) { return x(d.Scores) + 45; })
+			.attr("y", function(d,i){ return (y0.bandwidth() * i + 28) ; })
+			.attr("dy", ".35em")
+			.text(function(d) { return " - " + (d.Scores * 100).toFixed(2) + "%"; })
+			.transition()
+        .duration(500)
+        .attr("x", function(d) { return x(d.Scores) + 116; } ); 
+
+
+		var barWidth = function(d) { return x(d.Scores); };
+	}
+			
+			
+
+	function groupData(col_code) {
+			var subset = dataset.filter( function(d) { return d.Group == col_code ; });
+			draw(subset);
+		}
+
+
+	d3.selectAll(".paramCheckbox")
+      .on("change", function() {
+          cb  = d3.select(this);
+          if(cb.property("checked")){
+              col_code = col_code + +cb.property("value")
+								if(col_code == 511){
+										d3.selectAll(".selectAll").property("checked", true);
+							}}
+          else{
+              col_code = col_code - +cb.property("value")
+							d3.selectAll(".selectAll").property("checked", false);}
+				console.log(col_code);	
+				groupData(col_code);
+      });
+
+        d3.selectAll(".selectAll")
+      .on("change", function() {
+          cb  = d3.select(this);
+          if(cb.property("checked")){
+        d3.selectAll(".paramCheckbox").property("checked", true); 
+        col_code =  511;
+        }else{
+                 d3.selectAll('.paramCheckbox').property('checked', false);                                
+        col_code = 0;
+        }
+			console.log(col_code);
+			groupData(col_code);
+      });
+
+	
+
+	var dataset;
+	d3.csv("hbardata.csv", function(error, data) {
+			if (error) throw error;
+			dataset = data;
+			groupData(col_code);
+})
+// type function
+
+	function type(d) {
+		d.value = +d.value // coerce to number (d3 from tsv type conversion)
+		return d;
+}  
+ //Grouped vertical bar chart
+var col_codes = ["Gold Spent",  "Percentage Gold Spent",  "End Level",  "Exp Earn Rate",  "Healing",  "Kills",  "Environmental Deaths", "Assist Rate",  "Teamfight Participation"].reverse();
+
+var vbar = d3.select(".vbar"),
+    margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = +vbar.attr("width") - margin.left - margin.right,
+    height = +vbar.attr("height") - margin.top - margin.bottom,
+    g = vbar.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x0 = d3.scaleBand()
+    .rangeRound([0, width])
+    .paddingInner(0.08);
+
+var x1 = d3.scaleBand()
+    .padding(0.05);
+
+var y = d3.scaleLinear()
+    .rangeRound([height, 75]);
+
+var z = d3.scaleOrdinal()
+    .domain(d3.range(4))
+    .range(d3.schemeCategory20c);
+
+d3.csv("vbardata.csv", function(d, i, columns) {
+  for (var i = 1, n = columns.length; i < n; ++i) d[columns[i]] = +d[columns[i]];
+  return d;
+}, function(error, data) {
+
+
+  if (error) throw error;
+
+  var keys = data.columns.slice(2,);
+
+  x0.domain(data.map(function(d) { return d.Group; }));
+  x1.domain(keys).rangeRound([0, x0.bandwidth()]);
+  y.domain([0, d3.max(data, function(d) { return d3.max(keys, function(key) { return d[key]; }); })]).nice();
+  
+  g.append("g")
+    .selectAll("g")
+    .data(data)
+    .enter().append("g")
+      .attr("transform", function(d) { return "translate(" + x0(d.Group) + ",0)"; })
+    .selectAll("rect")
+    .data(function(d) { return keys.map(function(key) { return {key: key, value: d[key]}; }); })
+    .enter().append("rect")
+      .attr("x", function(d) { return x1(d.key); })
+      .attr("y", function(d) { return y(d.value); })
+      .attr("width", x1.bandwidth())
+      .attr("height", function(d) { return height - y(d.value); })
+      .attr("fill", function(d, i) { return z(i); });
+  
+  g.append("g")
+      .attr("class", "axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x0)
+      .ticks(8)
+        .tickFormat(function(d,i) { return col_codes[i] ; }) )
+	.attr("font","arial")
+	.attr("font-size", "13px");
+  g.append("g")
+      .attr("class", "axis")
+      .call(d3.axisLeft(y).ticks(null, "s"))
+    .append("text")
+      .attr("x", 2)
+      .attr("y", y(y.ticks().pop()) + 0.5)
+      .attr("dy", "0.32em")
+      .attr("fill", "#000")
+      .attr("font-weight", "bold")
+      .attr("text-anchor", "start")
+      .text("Scores");
+
+  var legend = g.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "end")
+    .selectAll("g")
+    .data(keys)
+    .enter().append("g")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  legend.append("rect")
+      .attr("x", width - 25)
+			.attr("y", -8)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", function(d, i) {return z(i); });
+
+  legend.append("text")
+      .attr("x", width - 30)
+      .attr("y", 2)
+      .attr("dy", "0.32em")
+      .text(function(d) { return d; });
+});
+
+
+  </script>
+</body>
+</html>

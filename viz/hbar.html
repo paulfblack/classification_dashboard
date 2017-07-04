@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <style type="text/css">
+    /*css to go here*/
+        .chart rect {
+                fill: orange;
+        }
+
+        .chart text {
+                fill: white;
+                font: 10px sans-serif;
+                text-anchor: end;
+}
+  </style>
+</head>
+<body class="special">
+		<svg class="chart"></svg>
+	<div>
+		<input type="checkbox" class="paramCheckbox" value="1"> Parameter 1 <br> <br>
+    <input type="checkbox" class="paramCheckbox" value="2"> Parameter 2 <br> <br>
+    <input type="checkbox" class="paramCheckbox" value="4"> Parameter 3 <br> <br>
+		<input type="checkbox" class="paramCheckbox" value="8"> Parameter 4 <br> <br>
+    <input type="checkbox" class="paramCheckbox" value="16"> Parameter 5 <br> <br>
+    <input type="checkbox" class="paramCheckbox" value="32"> Parameter 6 <br> <br>
+		<input type="checkbox" class="paramCheckbox" value="64"> Parameter 7  <br> <br>
+    <input type="checkbox" class="paramCheckbox" value="128"> Parameter 8
+	</div>
+<script src="https://d3js.org/d3.v4.js"></script>
+ <script>
+
+	var margin = {top: 20, right: 40, bottom: 20, left: 10};
+    var width = 720 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+  //Set specifications that do not rely on data
+		var col_code = 1;
+//		var width = 420,
+//				barHeight = 20;
+
+		var x = d3.scaleLinear()
+				.range([1, width]);
+
+//		var chart = d3.select(".chart")
+	//			.attr("width", width)
+	var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");		
+
+		function groupData(col_code) {
+			var subset = dataset.filter(function(d) { return d.Group == col_code; });
+			draw(subset);
+		}
+
+
+		function draw(subset) {
+
+		  svg.selectAll("g.scores").remove();
+
+			var scores = svg.selectAll("g.scores")
+						.data(subset)
+						.enter().append("g")
+						.attr("class", "scores");
+
+			scores.append("rect")
+					.attr("width", function(d) { return x(d.Scores); })
+					.attr("heigth", height - 1);
+
+			scores.append("text")
+					.attr("x", function(d) { return x(d.Scores) - 3; })
+					.attr("dy", ".35em")
+					.text(function(d) { return d.Scores; });
+}
+
+		d3.selectAll(".paramCheckbox")
+      .on("change", function() {
+        // If the button is clicked, select the text from the button
+          cb  = d3.select(this);
+					if(cb.property("checked")){
+							col_code = col_code + cb.property(+"value")}
+					else{
+							col_code = col_code - cb.property(+"value")}
+        groupData(col_code);
+      });
+
+
+        function type(d) {
+                d.Scores = +d.Scores; // coerce to number (d3 from tsv type conversion)
+                return d;
+}
+
+		var dataset;
+
+		d3.csv("data.csv", type, function(error, data) {
+			dataset = data;
+			groupData("1");
+			x.domain([0, d3.max(data, function(d) { return d.Scores; })]);
+			svg.attr("height", height * data.length);
+}); // end of d3.tsv call
+
+
+  </script>
+</body>                                                                                                                         29,12-33      Top
+</html>
+
