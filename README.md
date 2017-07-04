@@ -11,6 +11,8 @@ consistency and interpretability a single model classifier type was used through
 feature combinations. To account for the diversity in feature spaces accross combinations Random Forest Classifier was 
 chosen for all models. This allowed for a balance of interpretability, accuracy, and speed over a diverse set of combinations each with unique model requirements.  
 
+**Tools Used:** D3.js, MatPlotLib, Seaborn, SQL, SKLearn  
+  
 ## Preliminary EDA
 
 Prior to running the final models, it was important to assess if there were any advantages provided by hero selection in DOTA 2.
